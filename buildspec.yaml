@@ -1,0 +1,39 @@
+version: 0.2
+
+env:
+  variables:
+    TARGET_BUCKET: over-ride-this-in-cicd-yaml
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.7
+    commands:
+      - aws --version
+      - pip3 install --user aws-sam-cli
+  build:
+    commands:
+      - export BUILD_DIR=./.aws-sam/build
+      - export PYTHON_USER_PATH="$(python -m site --user-base)"
+      - export PATH="$PATH:/root/.local/bin"
+      - export TEMPLATE_OUT="NewSamTemplate.yaml"
+      - sam --version
+      - echo "TARGET_BUCKET=$TARGET_BUCKET"
+      - rm -rf "$BUILD_DIR"
+      - rm -rf "$TEMPLATE_OUT"
+      - pip install -r requirements.txt
+      - pip install -r requirements/dev.txt
+      - python -m nose tests/unit
+      - sam build
+      - sam package --debug --output-template-file ./"$TEMPLATE_OUT" --s3-bucket "$TARGET_BUCKET"
+      - aws --version
+      - sam --version
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo "{\"Parameters\":{\"Tag\":\"${CODEBUILD_RESOLVED_SOURCE_VERSION}\"}}" > overrides.json
+artifacts:
+  files:
+    - template.yaml
+    - overrides.json
+    - NewSamTemplate.yaml

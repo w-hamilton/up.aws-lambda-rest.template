@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  API and orchestration for Example Service
+
+Globals:
+  Function:
+    Timeout: 10
+  Api:
+    Cors:
+      AllowOrigin: "*"
+      AllowMethods: "POST,GET,OPTIONS"
+      MaxAge: "600"
+      AllowHeaders: "authorization,x-forwarded-for,content-type,content-encoding,accept-encoding"
+
+Parameters:
+  ConsumerAuthStackName:
+    Type: String
+    Description: The name of the consumer-auth stack
+    Default: consumer-auth-stack
+
+Resources:
+  ExampleServiceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 1024
+      CodeUri: ./
+      Handler: example.controller.app
+      Runtime: python3.7
+      Events:
+        ExampleInfo:
+          Type: Api
+          Properties:
+            Path: /example/v1/info
+            Method: get
+            RestApiId: !Ref ExampleServiceGateway
+        ExampleEcho:
+          Type: Api
+          Properties:
+            Path: /example/v1/echo
+            Method: get
+            RestApiId: !Ref ExampleServiceGateway
+      Policies:
+        - AWSLambdaVPCAccessExecutionRole
+        - AmazonKinesisFullAccess
+        - AmazonSSMReadOnlyAccess
+      # Environment:
+      #   Variables:
+      #     ENVNAME: !Ref EnvironmentName
+
+  ExampleServiceGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: prod
+      Auth:
+        # DefaultAuthorizer: CognitoAuth
+        Authorizers:
+          CognitoAuth:
+            UserPoolArn:
+              Fn::ImportValue: !Sub "${ConsumerAuthStackName}:UserPoolArn"
+      DefinitionBody:
+        swagger: "2.0"
+        info:
+          version: "1.0"
+          #title: !Join ["-", [!Ref EnvironmentName, "up-svc-example"]]
+        schemes:
+          - https
+        produces:
+          - application/json
+        paths:
+          /example/v1/info:
+            get:
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Content-Type:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ExampleV1Function}/invocations
+                passthroughBehavior: when_no_match
+                httpMethod: get
+                type: aws_proxy
+          /example/v1/echo:
+            get:
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Content-Type:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ExampleV1Function}/invocations
+                passthroughBehavior: when_no_match
+                httpMethod: post
+                type: aws_proxy
+
+
+Outputs:
+  ExampleV1Api:
+    Description: "API Gateway endpoint URL for Prod stage for Example"
+    Value: !Sub "https://${ExampleServiceGateway}.execute-api.${AWS::Region}.amazonaws.com/prod/example/v1/soft"
+  ExampleV1Function:
+    Description: "CreditBureauServiceV1 Lambda Function ARN"
+    Value: !GetAtt ExampleV1Function.Arn
+  ExampleV1FunctionIamRole:
+    Description: "Implicit IAM Role created for ExampleV1Function"
+    Value: !GetAtt ExampleV1FunctionRole.Arn
