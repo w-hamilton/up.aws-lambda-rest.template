@@ -8,10 +8,10 @@ Globals:
     Timeout: 10
   Api:
     Cors:
-      AllowOrigin: "*"
-      AllowMethods: "POST,GET,OPTIONS"
-      MaxAge: "600"
-      AllowHeaders: "authorization,x-forwarded-for,content-type,content-encoding,accept-encoding"
+      AllowOrigin: "'*'"
+      AllowMethods: "'POST,GET,OPTIONS'"
+      MaxAge: "'600'"
+      AllowHeaders: "'authorization,x-forwarded-for,content-type,content-encoding,accept-encoding'"
 
 Parameters:
   ConsumerAuthStackName:
