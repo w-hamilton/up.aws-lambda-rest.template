@@ -1,16 +1,15 @@
-## Credit Bureau Service
-###### Repo: `up.svc.cbs`
+## Example Service
+###### Repo: `up.aws-lambda-rest.template`
 
 ### Description
-This Lambda implements the Credit Bureau Service.
+This Lambda implements the Example Service.
 
 Below is the structure of the project:
 
 ```
 .
 ├── README.md                      <-- This instructions file
-├── bp                             <-- Business logic module for this lambda
-├── models                         <-- Models (mostly data classes within schema.py)
+├── example                        <-- Business logic module for this lambda
 ├── template.yaml                  <-- SAM Template
 ├── buildspec.yaml                 <-- CodeBuild specification
 └── tests                          <-- Unit tests
@@ -41,10 +40,10 @@ This Lambda uses the [Chalice Serverless Microframework](https://chalice.readthe
 
 ### Testing
 
-This project uses pytest. Simply run
+This project uses nose tests. Simply run
 
 ```
-python -m pytest
+python -m nose tests/unit
 ```
 
 ### Deployment
