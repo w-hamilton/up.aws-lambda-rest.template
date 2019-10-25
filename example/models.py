@@ -1,8 +1,6 @@
 import datetime
 
-from attr import dataclass
 from marshmallow import Schema, fields
-from dataclasses_json import dataclass_json
 
 
 class DateTimeCompat(fields.DateTime):
