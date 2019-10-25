@@ -1,8 +1,6 @@
 import datetime
 import json
 
-import yaml
-from chalice.app import Request
 from marshmallow import ValidationError
 
 from example import models, settings, events
